@@ -1,4 +1,4 @@
-mod neural_network {
+pub mod neural_network {
     use crate::math::math::{Matrix, Vector};
 
     pub struct NeuralNetwork {
@@ -33,28 +33,12 @@ mod neural_network {
             }
         }
 
-        /*
-        // fix later
-        pub fn sigmoid(v: &Vector) -> Vector {
-            Vector {
-                data: v.data.iter().map(|x: f64| 1.0 / (1.0 + (-x).exp())).collect(),
-            }
-        }
-
-        // implement
-        pub fn sigmoid_derivative(v: &Vector) -> Vector {
-            Vector {
-                data: vec![0.0],
-            }
-        }
-
         pub fn forward_propagation(&self, input: &Vector) -> Vector {
-            let hidden_input: Vector = self.weights_input_hidden.multiply_vector(input) + &self.bias_hidden;
-            let hideen_output: Vector = Self::sigmoid(&hidden_input);
+            let hidden_input: Vector = self.weights_input_hidden.multiply_vector(input) + self.bias_hidden.clone();
+            let hideen_output: Vector = hidden_input.sigmoid();
 
-            let output_input: Vector = self.weights_hidden_output.multiply_vector(&hideen_output) + &self.bias_output;
-            Self::sigmoid(&output_input)
+            let output_input: Vector = self.weights_hidden_output.multiply_vector(&hideen_output) + self.bias_output.clone();
+            output_input.sigmoid()
         }
-        */
     }
 }

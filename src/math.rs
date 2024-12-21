@@ -1,5 +1,6 @@
 pub mod math {
-    use std::ops::{Add, Mul};
+    use std::ops::{Add, Sub, Mul};
+    use assert_approx_eq::assert_approx_eq;
 
     #[derive(Debug, Clone)]
     pub struct Vector {
@@ -30,12 +31,6 @@ pub mod math {
             }
         }
 
-        /*
-            let data: Vec<Vec<f64>> = (0..rows)
-                .map(|_: usize| (0..cols).map(|_: usize| rand::random::<f64>()).collect())
-                .collect();
-         */
-
         pub fn random(size: usize) -> Self {
             let data: Vec<f64> = (0..size).map(|_: usize| rand::random::<f64>()).collect();
             
@@ -54,6 +49,22 @@ pub mod math {
             assert_eq!(self.len(), other.len());
 
             self.data.iter().zip(other.data.iter()).map(|(a, b)| a * b).sum()
+        }
+
+        pub fn sigmoid(&self) -> Vector {
+            let data: Vec<f64> = self.data.iter().map(|x: &f64| 1.0 / (1.0 + (-x).exp())).collect();
+
+            Vector { data }
+        }
+
+        pub fn sigmoid_derivative(&self) -> Vector {
+            let sigmoid_values: Vector = self.sigmoid();
+
+            let ones_arr: Vec<f64> = vec![1.0; self.len()];
+            let ones: Vector = Vector::from_data(ones_arr);
+    
+            // sigmoid(x) * (1 - sigmoid(x))
+            sigmoid_values.clone() * (ones - sigmoid_values)
         }
     }
 
@@ -112,11 +123,32 @@ pub mod math {
         }
     }
 
+    impl Sub for Vector {
+        type Output = Vector;
+
+        fn sub(self, other: Vector) -> Vector {
+            assert_eq!(self.len(), other.len());
+
+            let data: Vec<f64> = self.data.iter().zip(other.data.iter()).map(|(a, b)| a - b).collect();
+            Vector { data }
+        }
+    }
+
     impl Mul<f64> for Vector {
         type Output = Vector;
 
         fn mul(self, scalar: f64) -> Vector {
             let data: Vec<f64> = self.data.iter().map(|&x| x * scalar).collect();
+            Vector { data }
+        }
+    }
+
+    // NOT A DOT PRODUCT
+    impl Mul for Vector {
+        type Output = Vector;
+
+        fn mul(self, other: Vector) -> Vector {
+            let data: Vec<f64> = self.data.iter().zip(other.data.iter()).map(|(a, b)| a * b).collect();
             Vector { data }
         }
     }
@@ -148,6 +180,21 @@ mod tests {
     use math::{Matrix, Vector};
 
     use super::*;
+
+        // -------------------- VECTOR TEST CASES --------------------
+        #[test]
+        fn test_zeroes_vector_creation() {
+            let v1: Vector = Vector::zeroes(3);
+
+            assert_eq!(v1.len(), 3);
+        }
+
+        #[test]
+        fn test_random_vector_creation() {
+            let v1: Vector = Vector::random(5);
+
+            assert_eq!(v1.len(), 5);
+        }
 
         #[test]
         fn test_vector_dot() {
@@ -183,8 +230,28 @@ mod tests {
 
         #[test]
         fn test_vector_sigmoid() {
-            // sigmoid not yet implemented
+            let v1: Vector = Vector::from_data(vec![2.0, 4.0, -2.0]);
+
+            let result: Vector = v1.sigmoid();
+
+            assert_approx_eq::assert_approx_eq!(result.data[0], 0.880797077978, 1e-10f64);
+            assert_approx_eq::assert_approx_eq!(result.data[1], 0.982013790038, 1e-10f64);
+            assert_approx_eq::assert_approx_eq!(result.data[2], 0.119202922022, 1e-10f64);
         }
+
+        #[test]
+        fn test_vector_sigmoid_derivative() {
+            let v1: Vector = Vector::from_data(vec![2.0, 4.0, -2.0]);
+
+            let result: Vector = v1.sigmoid_derivative();
+ 
+            assert_approx_eq::assert_approx_eq!(result.data[0], 0.104993585404, 1e-10f64);
+            assert_approx_eq::assert_approx_eq!(result.data[1], 0.017662706213, 1e-10f64);
+            assert_approx_eq::assert_approx_eq!(result.data[2], 0.104993585404, 1e-10f64);
+
+        }
+
+        // -------------------- MATRIX TEST CASES --------------------
 
         #[test]
         fn test_matrix_multiply_vector() {
@@ -213,8 +280,17 @@ mod tests {
         }
 
         #[test]
-        fn test_empty_matrix_creation() {
+        fn test_zeroes_matrix_creation() {
             let m1: Matrix = Matrix::zeroes(3, 3);
+
+            // check dimensions
+            assert_eq!(m1.rows(), 3);
+            assert_eq!(m1.cols(), 3);
+        }
+
+        #[test]
+        fn test_random_matrix_creation() {
+            let m1: Matrix = Matrix::random(3, 3);
 
             // check dimensions
             assert_eq!(m1.rows(), 3);
