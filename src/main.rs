@@ -5,7 +5,7 @@ use neural_network::neural_network::NeuralNetwork;
 use math::math::Vector;
 
 fn main() {
-    let mut neural_net: NeuralNetwork = NeuralNetwork::new(2, 10, 1, 0.02);
+    let mut neural_net: NeuralNetwork = NeuralNetwork::new(2, 10, 1, 1.2);
 
     let inputs: Vec<Vector> = vec![
         Vector::from_data(vec![0.0, 0.0]),
@@ -21,17 +21,18 @@ fn main() {
         Vector::from_data(vec![0.0]),
     ];
 
+
     for (inputs, target) in inputs.iter().zip(targets.iter()) {
         let output = neural_net.forward_propagation(&inputs);
         println!("Input: {:?}, Expected: {:?}, Prediction: {:?}", inputs.data, target.data[0], output.data[0]);
     }
 
     println!();
-    neural_net.train(&inputs, &targets, 1000);
+    neural_net.train(&inputs, &targets, 5000);
     println!();
 
     for (inputs, target) in inputs.iter().zip(targets.iter()) {
-        let output = neural_net.forward_propagation(&inputs);
+        let output = neural_net.prediction(&inputs);
         println!("Input: {:?}, Expected: {:?}, Prediction: {:?}", inputs.data, target.data[0], output.data[0]);
     }
 }

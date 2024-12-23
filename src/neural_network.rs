@@ -37,11 +37,19 @@ use crate::math::math::{Matrix, Vector};
             }
         }
 
-        pub fn forward_propagation(&self, input: &Vector) -> Vector {
+        pub fn prediction(&self, input: &Vector) -> Vector {
             let hidden_input: Vector = self.weights_input_hidden.multiply_vector(input) + self.bias_hidden.clone();
-            let hideen_output: Vector = hidden_input.sigmoid();
+            let hidden_input: Vector = hidden_input.sigmoid();
 
-            let output_input: Vector = self.weights_hidden_output.multiply_vector(&hideen_output) + self.bias_output.clone();
+            let output_input: Vector = self.weights_hidden_output.multiply_vector(&hidden_input) + self.bias_output.clone();
+            output_input.sigmoid()
+        }
+
+        pub fn forward_propagation(&self, input: &Vector) -> Vector {
+            let hidden_output: Vector = self.weights_input_hidden.multiply_vector(input) + self.bias_hidden.clone();
+            let hidden_output: Vector = hidden_output.sigmoid();
+
+            let output_input: Vector = self.weights_hidden_output.multiply_vector(&hidden_output) + self.bias_output.clone();
             output_input.sigmoid()
         }
 
@@ -82,7 +90,7 @@ use crate::math::math::{Matrix, Vector};
 
                 total_loss /= inputs.len() as f64;
 
-                if epoch % 100 == 0 {
+                if epoch % 500 == 0 {
                     println!("Epoch {}: Loss = {}", epoch, total_loss);
                 }
             }
