@@ -1,6 +1,5 @@
 pub mod math {
     use std::ops::{Add, Sub, Mul};
-    use assert_approx_eq::assert_approx_eq;
 
     #[derive(Debug, Clone)]
     pub struct Vector {
@@ -66,6 +65,35 @@ pub mod math {
             // sigmoid(x) * (1 - sigmoid(x))
             sigmoid_values.clone() * (ones - sigmoid_values)
         }
+
+        pub fn outer_product(&self, other: &Vector) -> Matrix {
+            let rows: usize = self.len();
+            let cols: usize = other.len();
+
+            let mut data: Vec<Vec<f64>> = Vec::with_capacity(rows);
+
+            for row_index in 0..rows {
+                let mut row: Vec<f64> = Vec::with_capacity(cols);
+
+                for col_index in 0..cols {
+                    row.push(self.data[row_index] * other.data[col_index]);
+                }
+
+                data.push(row);
+            }
+
+            Matrix { data }
+        }
+
+        pub fn sum(&self) -> f64 {
+            let mut sum: f64 = 0.0;
+
+            for element in self.data.iter() {
+                sum += element;
+            }
+
+            sum
+        }
     }
 
     impl Matrix {
@@ -95,9 +123,19 @@ pub mod math {
             self.data[0].len()
         }
 
-        pub fn transpose(&self) -> Self {
-            // not yet implemented
-            self.clone()
+        pub fn transpose(&self) -> Matrix {
+            let rows: usize = self.rows();
+            let cols: usize = self.cols();
+
+            let mut transposed_data: Vec<Vec<f64>> = vec![vec![0.0; rows]; cols];
+
+            for row_index in 0..rows {
+                for col_index in 0..cols {
+                    transposed_data[col_index][row_index] = self.data[row_index][col_index];
+                }
+            }
+
+            Matrix { data: transposed_data }
         }
 
         pub fn multiply_vector(&self, vector: &Vector) -> Vector {
@@ -150,6 +188,47 @@ pub mod math {
         fn mul(self, other: Vector) -> Vector {
             let data: Vec<f64> = self.data.iter().zip(other.data.iter()).map(|(a, b)| a * b).collect();
             Vector { data }
+        }
+    }
+
+    impl Sub for Matrix {
+        type Output = Matrix;
+    
+        fn sub(self, other: Matrix) -> Matrix {
+            let rows: usize = self.rows();
+            let cols: usize = self.cols();
+
+            assert_eq!(rows, other.rows());
+            assert_eq!(cols, other.cols());
+
+            let mut result: Matrix = Matrix::zeroes(rows, cols);
+
+            for row_index in 0..rows {
+                for col_index in 0..cols {
+                    result.data[row_index][col_index] = self.data[row_index][col_index] - other.data[row_index][col_index];
+                }
+            }
+
+            result
+        }
+    }
+
+    impl Mul<f64> for Matrix {
+        type Output = Matrix;
+
+        fn mul(self, scalar: f64) -> Matrix {
+            let rows: usize = self.rows();
+            let cols: usize = self.cols();    
+
+            let mut result: Matrix = Matrix::zeroes(rows, cols);
+
+            for row_index in 0..rows {
+                for col_index in 0..cols {
+                    result.data[row_index][col_index] = self.data[row_index][col_index] * scalar;
+                }
+            }
+
+            result
         }
     }
 
@@ -248,7 +327,20 @@ mod tests {
             assert_approx_eq::assert_approx_eq!(result.data[0], 0.104993585404, 1e-10f64);
             assert_approx_eq::assert_approx_eq!(result.data[1], 0.017662706213, 1e-10f64);
             assert_approx_eq::assert_approx_eq!(result.data[2], 0.104993585404, 1e-10f64);
+        }
 
+        #[test]
+        fn test_vector_outer_product() {
+            let v1: Vector = Vector::from_data(vec![1.0, 2.0]);
+            let v2: Vector = Vector::from_data(vec![3.0, 4.0, 5.0]);
+
+            let result: Matrix = v1.outer_product(&v2);
+            let expected: Matrix = Matrix::from_data(vec![
+                vec![3.0, 4.0, 5.0],
+                vec![6.0, 8.0, 10.0],
+            ]);
+
+            assert_eq!(result, expected);
         }
 
         // -------------------- MATRIX TEST CASES --------------------
@@ -295,6 +387,24 @@ mod tests {
             // check dimensions
             assert_eq!(m1.rows(), 3);
             assert_eq!(m1.cols(), 3);
+        }
+
+        #[test]
+        fn test_matrix_transpose() {
+            let m1: Matrix = Matrix::from_data(vec![
+                vec![1.0, 2.0, 3.0],
+                vec![4.0, 5.0, 6.0],
+            ]);
+
+            let result: Matrix = m1.transpose();
+
+            let expected: Matrix = Matrix::from_data(vec![
+                vec![1.0, 4.0],
+                vec![2.0, 5.0],
+                vec![3.0, 6.0],
+            ]);
+
+            assert_eq!(result, expected);
         }
 
         #[test]
