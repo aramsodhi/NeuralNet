@@ -21,7 +21,6 @@ use crate::math::math::{Matrix, Vector};
             let weights_input_hidden: Matrix = Matrix::random(hidden_size, input_size);
             let weights_hidden_output: Matrix = Matrix::random(output_size, hidden_size);
 
-            // originally was using zeroes, consider switching back for simplicity?
             let bias_hidden: Vector = Vector::zeroes(hidden_size);
             let bias_output: Vector = Vector::zeroes(output_size);
 
